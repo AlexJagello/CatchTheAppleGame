@@ -1,0 +1,33 @@
+html, body{
+    margin:0;
+    overflow:hidden;
+
+}
+
+#mainDiv{
+    position: relative; border: 10px solid #333;
+    height: 700px;
+    width: 1000px;
+    margin:0 auto;
+}
+
+#topRectCanvas{
+    position: absolute; 
+    left: 0; 
+    top: 0; 
+    z-index: 0;
+}
+
+#downRectCanvas{
+    position: absolute;
+    left: 0;
+    top: 652px;
+    z-index: 1;
+    background-color: transparent;
+}
+
+.statistic
+{
+    position:fixed; 
+    left: 0; 
+}
