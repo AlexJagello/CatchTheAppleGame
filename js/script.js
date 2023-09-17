@@ -4,48 +4,83 @@ const topRectCanvas = document.getElementById("topRectCanvas");
 const downRectCanvas = document.getElementById("downRectCanvas");
 const ctxTop = topRectCanvas.getContext("2d");
 const ctxDown = downRectCanvas.getContext("2d");
+const modalWindow = document.querySelector(".modal-window");
+const overlay = document.querySelector(".overlay");
+const btnCloseModalWindow = document.querySelector(".close-modal-window");
 const audioStep = new Audio("https://www.fesliyanstudios.com/play-mp3/6994");
 const audioSuccess = new Audio("https://www.fesliyanstudios.com/play-mp3/5255");
 const audioUnSuccess = new Audio("https://www.fesliyanstudios.com/play-mp3/2459");
-
 const sourceMain = document.getElementById("sourceMain");
 const sourceBomb = document.getElementById("sourceBomb");
 const sourceApple = document.getElementById("sourceApple");
-
-
 const statisticScore = document.getElementById("statisticScore");
 const statisticLife = document.getElementById("statisticLife");
+const statisticBestResult = document.getElementById("statisticBestResult");
 const fallingRectSize = 40;
 const amountOfLinesWithCell = 700/fallingRectSize;
-const amountOfCellInLine = 1000/fallingRectSize + 1;
+const amountOfCellInLine = 1000/fallingRectSize;
+const diffShift = fallingRectSize/12;
 const downRectHeight = 65;
-const downRectWidth = 80;
+const downRectWidth = 100;
 const arrayOfCells = [];
 
-let lifes = 10;
+let bestResult = 0;
+let lifes = 1;
 let score = 0;
-statisticLife.textContent = "Lifes: " + lifes;
-
 let coordDownRectX = 50;
-topRectCanvas.width = window.innerWidth;
-downRectCanvas.width = window.innerWidth;
+let shift = 0;
 
-for(let i = 0; i < amountOfLinesWithCell; i++)
+
+
+
+function drawAppleCatcherPicture()
+{
+    ctxDown.clearRect(0,0,window.innerWidth,60);
+    ctxDown.beginPath();
+    ctxDown.drawImage(sourceMain, coordDownRectX, 0, downRectWidth, 60);
+    ctxDown.fill();
+}
+
+function initializeArray()
+{
+    for(let i = 0; i < amountOfLinesWithCell; i++)
     {
         arrayOfCells[i] = [];
         for(let j = 0; j < amountOfCellInLine; j++)
         arrayOfCells[i][j] = 0;
     }
+}
 
+function closeModalWindow()
+{
+    modalWindow.classList.add('hidden');
+    overlay.classList.add('hidden');
+    addEventListener("keydown", moveRect);
+    udateApples = setInterval(moveApples, 16);
+    ctxDown.clearRect(0,0,window.innerWidth,700);
+    initializeArray();
+    score = 0;
+    lifes = 1;
+    drawStatistic();
+    drawAppleCatcherPicture();
+}
 
+function drawStatistic()
+{
+    statisticLife.textContent = lifes;
+    statisticScore.textContent = score;
+}
 
-function moveRect(e){
-    ctxDown.clearRect(0,0,window.innerWidth,60);
-    ctxDown.beginPath();
-  
-    if(e!=null)
-    {
-        switch(e.key){
+function drawBestResult()
+{
+    statisticBestResult.textContent = "Best result: " + bestResult;
+}
+
+function moveRect(){  
+    
+if(!keyDown) return;
+
+        switch(keyName){
          
         case "ArrowLeft":  
             if(coordDownRectX > 5)
@@ -56,13 +91,11 @@ function moveRect(e){
                 coordDownRectX += 10;              
             break;
         }
-    }
+    
   
    
     audioStep.play();
-
-    ctxDown.drawImage(sourceMain, coordDownRectX, 0, downRectWidth, 60);
-    ctxDown.fill();
+    drawAppleCatcherPicture();
   }
 
   function moveApples()
@@ -81,37 +114,53 @@ function moveRect(e){
             newLine[i] = randApple ? 1 : (randBomb ? 2 : 0);            
         }
 
-    arrayOfCells.unshift(newLine);
-    arrayOfCells.pop();
+    if(shift == fallingRectSize)
+    {
+        arrayOfCells.unshift(newLine);
+        arrayOfCells.pop();
+        shift = 0;
 
-    drawSomeCell(1, sourceApple);
+        let lastLine = arrayOfCells[arrayOfCells.length - 2];
+        for(let i = 0; i < amountOfCellInLine; i++)    
+        {
+        
+            if(lastLine[i] == 1 && isSomethingCatching(i))
+            {
+                ++score;
+                audioSuccess.currentTime = 0;
+                audioSuccess.play();
+                drawStatistic();
+            }
+            if(lastLine[i] == 2 && isSomethingCatching(i))
+            {
+                --lifes;
+                audioUnSuccess.currentTime = 0;
+                audioUnSuccess.play();
+                drawStatistic();
+                if(lifes <= 0)
+                {
+                    modalWindow.classList.remove('hidden');
+                    overlay.classList.remove('hidden');
+                    clearInterval(udateApples);
+                    removeEventListener("keydown", moveRect);    
+                    if(score > bestResult){
+                        bestResult = score;
+                        drawBestResult();
+                    }    
+                }
+            }
+        }
+    }
+
+    shift += diffShift;
+    drawSomeCell(1, sourceApple, shift);
     ctxTop.fill();
 
     ctxTop.beginPath();
     //ctxTop.fillStyle = "blue";
-    drawSomeCell(2, sourceBomb);
+    drawSomeCell(2, sourceBomb, shift);
     ctxTop.fill();
 
-
-    let lastLine = arrayOfCells[arrayOfCells.length - 2];
-    for(let i = 0; i < amountOfCellInLine; i++)    
-    {
-        
-        if(lastLine[i] == 1 && isSomethingCatching(i))
-        {
-            ++score;
-            audioSuccess.currentTime = 0;
-            audioSuccess.play();
-            statisticScore.textContent = "Score : " + score;
-        }
-        if(lastLine[i] == 2 && isSomethingCatching(i))
-        {
-            --lifes;
-            audioUnSuccess.currentTime = 0;
-            audioUnSuccess.play();
-            statisticLife.textContent = "Lifes: " + lifes;
-        }
-    }
   }
 
   function isSomethingCatching(i)
@@ -119,28 +168,59 @@ function moveRect(e){
    
     let coordOfFallingRectX = i * fallingRectSize;
     console.log(coordOfFallingRectX + "     "  + coordDownRectX);
-    return coordDownRectX - fallingRectSize <= coordOfFallingRectX && coordDownRectX + downRectWidth >= coordOfFallingRectX; //вот здесь ошибка
+    return coordDownRectX - fallingRectSize <= coordOfFallingRectX && coordDownRectX + downRectWidth >= coordOfFallingRectX; 
   }
 
 
-  function drawSomeCell(oneOrTwo, source){
+  function drawSomeCell(oneOrTwo, source, shift){
     for(let i = 0; i < amountOfLinesWithCell; i++)
     {   
         for(let j = 0; j < amountOfCellInLine; j++)
         {
             if(arrayOfCells[i][j] == oneOrTwo)
             {
-                ctxTop.drawImage(source,j * fallingRectSize, i * fallingRectSize, fallingRectSize, fallingRectSize);                    
+                ctxTop.drawImage(source,j * fallingRectSize, i * fallingRectSize + shift, fallingRectSize, fallingRectSize);                    
             }
         }      
     }
   }
 
 
-  moveRect(null);
 
-  addEventListener("keydown", moveRect);
 
-  let udateApples = setInterval(moveApples, 200);
+topRectCanvas.width = window.innerWidth;
+downRectCanvas.width = window.innerWidth;
 
+drawStatistic();
+
+initializeArray();
+
+btnCloseModalWindow.addEventListener('click', closeModalWindow);
+overlay.addEventListener('click',closeModalWindow);
+
+drawAppleCatcherPicture();
+
+addEventListener("keydown", moveRect);
+
+let udateApples = setInterval(moveApples, 16);
+
+var keyDown = false;
+var keyName = "";
+
+document.onkeydown = function (evt) {
+   if(evt.key == "ArrowLeft" || evt.key == "ArrowRight") {
+keyDown = true;
+keyName = evt.key;
+   }
+}
+
+document.onkeyup = function(evt){
+ if(evt.key == "ArrowLeft" || evt.key == "ArrowRight") {
+keyDown = false;
+   }
+}
+
+setInterval(moveRect, 20);
+
+ 
  

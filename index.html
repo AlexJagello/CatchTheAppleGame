@@ -5,9 +5,27 @@
     <title>Document</title>
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
 </head>
+
 <body>
-    <h3 id="statisticScore" class="statistic" style="top: 20px">Score: 0</h3>
-    <h3 id="statisticLife" class="statistic" style="top:40px">Lifes: 0</h3>
+    
+    <ul class="statistic">
+        <li >          
+           <img src="img/apple.png" style="display:inline-block; padding: 0;
+           " height="24" width="24">
+           <h2 id="statisticScore" style="display:inline-block;"></h2> 
+        </li>
+        <li >
+            <div style="display:inline-block;">
+                <img src="img/heart.png" style="display:inline-block; padding: 0;" height="24" width="24">
+                <h2 id="statisticLife" style="display:inline-block;"></h2>
+            </div>          
+        </li>
+        <li >
+            <h3 id="statisticBestResult">Best result: 0</h3>
+        </li>
+    </ul>
+        
+
     <div id="mainDiv" class="drawingBox">
         <canvas id="topRectCanvas" height="700px"></canvas>
         <canvas id="downRectCanvas" height="60px"></canvas>
@@ -17,6 +35,15 @@
         <img id="sourceBomb" src="img/bomb.png" />
         <img id="sourceApple" src="img/apple.png" />
     </div>
+
+    <div class="modal-window hidden">
+        <button class="close-modal-window">&times;</button>
+        <h1>Game over</h1>      
+    </div>
+
+    <div class="overlay hidden"></div>
+
+
     <script src="js/script.js"></script>
 </body>
 </html>
